@@ -79,16 +79,16 @@ Across the 500 block-bootstrap weather-price years, the net cashflow gap between
 fixed `380.0 PLN/MWh` contract decomposes into four exact additive components (`Base Price Level`, `Profile / Shape
 Risk`, `Volume Risk`, and `Cross-Term / Weather-Price Covariance`):
 
-| Contract / Portfolio (`100 GWh/yr`, `S = 380 PLN/MWh`, unfloored reference) | Base price level $\bar{P} - S$ (`PLN/MWh`) | Profile / shape risk $P_{\text{cap}} - \bar{P}$ (`PLN/MWh`) | Multi-year volume + covariance (`PLN/MWh`) | Net seller settlement P50 / P90 (`PLN/MWh`) | Max accounting bridge error (`PLN/MWh`) |
+| Contract / Portfolio (`100 GWh/yr`, `S = 380 PLN/MWh`, unfloored reference) | Base price level $`\bar{P} - S`$ (`PLN/MWh`) | Profile / shape risk $`P_{\text{cap}} - \bar{P}`$ (`PLN/MWh`) | Multi-year volume + covariance (`PLN/MWh`) | Net seller settlement P50 / P90 (`PLN/MWh`) | Max accounting bridge error (`PLN/MWh`) |
 |---|---|---|---|---|---|
-| `Pay-as-Produced 100 % PV` (zero-price floor) | hedged on $E_{\text{gen}}$ | 0.0 (buyer holds shape) | -33.6 (floor clawback) | 346.4 / 326.8 | `< 1e-12` |
-| `Pay-as-Produced 100 % Wind` (zero-price floor) | hedged on $E_{\text{gen}}$ | 0.0 (buyer holds shape) | -12.6 (floor clawback) | 367.4 / 335.2 | `< 1e-12` |
-| `Baseload 100 % PV`, `0 h BESS` | hedged on $E_{\text{contract}}$ | -156.6 raw (-118.0 net) | -24.0 (cov + balancing) | 238.4 / 213.4 | `< 1e-12` |
-| `Baseload 65 % Wind + 35 % PV`, `0 h BESS` | hedged on $E_{\text{contract}}$ | -71.8 raw (-21.5 net) | -9.5 (cov + balancing) | 349.4 / 317.3 | `< 1e-12` |
-| `Baseload 65 % Wind + 35 % PV`, `+ 2 h BESS` | hedged on $E_{\text{contract}}$ | -7.5 after BESS shift | -3.5 (cov + balancing) | 369.3 / 344.2 | `< 1e-12` |
+| `Pay-as-Produced 100 % PV` (zero-price floor) | hedged on $`E_{\text{gen}}`$ | 0.0 (buyer holds shape) | -33.6 (floor clawback) | 346.4 / 326.8 | `< 1e-12` |
+| `Pay-as-Produced 100 % Wind` (zero-price floor) | hedged on $`E_{\text{gen}}`$ | 0.0 (buyer holds shape) | -12.6 (floor clawback) | 367.4 / 335.2 | `< 1e-12` |
+| `Baseload 100 % PV`, `0 h BESS` | hedged on $`E_{\text{contract}}`$ | -156.6 raw (-118.0 net) | -24.0 (cov + balancing) | 238.4 / 213.4 | `< 1e-12` |
+| `Baseload 65 % Wind + 35 % PV`, `0 h BESS` | hedged on $`E_{\text{contract}}`$ | -71.8 raw (-21.5 net) | -9.5 (cov + balancing) | 349.4 / 317.3 | `< 1e-12` |
+| `Baseload 65 % Wind + 35 % PV`, `+ 2 h BESS` | hedged on $`E_{\text{contract}}`$ | -7.5 after BESS shift | -3.5 (cov + balancing) | 369.3 / 344.2 | `< 1e-12` |
 
 - **Multi-year volume-price covariance is systematically negative.** Years with below-average wind and solar output
-  coincide with higher thermal dispatch and higher Polish spot prices ($\mathrm{Cov}(E_{\text{gen}}, P_{\text{cap}} - \bar{P}) < 0$).
+  coincide with higher thermal dispatch and higher Polish spot prices ($`\mathrm{Cov}(E_{\text{gen}}, P_{\text{cap}} - \bar{P}) < 0`$).
   A seller short of volume in a low-wind year buys back the shortfall against the fixed `100 GWh/yr` baseload
   commitment at elevated spot prices, creating an asymmetric left tail visible in the P90 cashflow spread.
 - **Pay-as-Produced does not eliminate shaping cost; it transfers it to the buyer.** Under a `Pay-as-Produced` PV
@@ -100,7 +100,7 @@ Risk`, `Volume Risk`, and `Cross-Term / Weather-Price Covariance`):
 
 ### 3. Negative-price floor clauses require +28 to +44 PLN/MWh strike uplift for PV
 
-In the calibrated 2026 Polish market (`354 hours/year` with $P_{\text{spot}} \le 0$, of which `276 hours` occur in
+In the calibrated 2026 Polish market (`354 hours/year` with $`P_{\text{spot}} \le 0`$, of which `276 hours` occur in
 consecutive runs of six hours or longer on spring/summer weekends and holidays), corporate buyers increasingly demand
 negative-price protection so they never pay a CfD top-up above the fixed strike when spot prices turn negative. When
 settlement is suspended during negative spot hours and the generator curtails output to avoid negative spot exposure,
@@ -142,12 +142,12 @@ portfolio concentrates annual cashflow tightly around the contract target (`P50 
 
 ### Exact four-term settlement decomposition
 
-Let $P_t$ denote the hourly spot price in hour $t \in \{1, \dots, T\}$ ($T = 8760$) with time-weighted annual mean
-$\bar{P} = \frac{1}{T}\sum_{t=1}^T P_t$, $g_t$ the hourly renewable generation with annual volume
-$E_{\text{gen}} = \sum_{t=1}^T g_t$ and generation-weighted capture price
-$P_{\text{cap}} = \frac{1}{E_{\text{gen}}}\sum_{t=1}^T g_t P_t$, and $L_t$ the contracted buyer load schedule with
-annual volume $E_{\text{contract}} = \sum_{t=1}^T L_t$ and load-weighted price
-$P_{\text{load}} = \frac{1}{E_{\text{contract}}}\sum_{t=1}^T L_t P_t$. Under a fixed-price PPA at strike $S$, the
+Let $`P_t`$ denote the hourly spot price in hour $`t \in \{1, \dots, T\}`$ ($`T = 8760`$) with time-weighted annual mean
+$`\bar{P} = \frac{1}{T}\sum_{t=1}^T P_t`$, $`g_t`$ the hourly renewable generation with annual volume
+$`E_{\text{gen}} = \sum_{t=1}^T g_t`$ and generation-weighted capture price
+$`P_{\text{cap}} = \frac{1}{E_{\text{gen}}}\sum_{t=1}^T g_t P_t`$, and $`L_t`$ the contracted buyer load schedule with
+annual volume $`E_{\text{contract}} = \sum_{t=1}^T L_t`$ and load-weighted price
+$`P_{\text{load}} = \frac{1}{E_{\text{contract}}}\sum_{t=1}^T L_t P_t`$. Under a fixed-price PPA at strike $`S`$, the
 annual settlement gap per contracted MWh decomposes identically into four additive terms:
 
 ```math
@@ -158,13 +158,13 @@ annual settlement gap per contracted MWh decomposes identically into four additi
 + \underbrace{\left(\frac{E_{\text{gen}} - E_{\text{contract}}}{E_{\text{contract}}}\right)(P_{\text{cap}} - \bar{P}) + (\bar{P} - P_{\text{load}})}_{\text{4. Cross-term (weather-price covariance) & load shape}}
 ```
 
-For a flat baseload contract ($L_t = E_{\text{contract}} / T$, so $P_{\text{load}} \equiv \bar{P}$), the CfD leg
-$E_{\text{contract}}(S - \bar{P})$ hedges Term 1 (`Base price level`), leaving the seller's net Baseload PPA revenue per
-contracted MWh as $S + \text{Term}_2 + \text{Term}_3 + \text{Term}_4$. Taking expectations across multi-year weather
-realisations with $\mathbb{E}[E_{\text{gen}}] = E_{\text{contract}}$ gives
-$\mathbb{E}[\text{Term}_4] = \mathrm{Cov}(E_{\text{gen}}/E_{\text{contract}}, P_{\text{cap}} - \bar{P})$.
+For a flat baseload contract ($`L_t = E_{\text{contract}} / T`$, so $`P_{\text{load}} \equiv \bar{P}`$), the CfD leg
+$`E_{\text{contract}}(S - \bar{P})`$ hedges Term 1 (`Base price level`), leaving the seller's net Baseload PPA revenue per
+contracted MWh as $`S + \text{Term}_2 + \text{Term}_3 + \text{Term}_4`$. Taking expectations across multi-year weather
+realisations with $`\mathbb{E}[E_{\text{gen}}] = E_{\text{contract}}`$ gives
+$`\mathbb{E}[\text{Term}_4] = \mathrm{Cov}(E_{\text{gen}}/E_{\text{contract}}, P_{\text{cap}} - \bar{P})`$.
 
-On an hourly basis, partitioning hours into surplus intervals ($g_t > L_t$) and deficit intervals ($g_t < L_t$) yields
+On an hourly basis, partitioning hours into surplus intervals ($`g_t > L_t`$) and deficit intervals ($`g_t < L_t`$) yields
 the exact residual balancing identity:
 
 ```math
@@ -175,20 +175,20 @@ the exact residual balancing identity:
 
 ### Negative-price floor clauses and fair strike uplift
 
-Under a negative-price clause active on hour set $\mathcal{H}_{\text{clause}}$ ($\mathcal{H}_{\text{zero}} = \{t : P_t < 0\}$
-for a strict zero-price floor, or $\mathcal{H}_{6\text{h}} = \{t : t \text{ belongs to a run of } \ge 6 \text{ consecutive hours with } P_t < 0\}$
+Under a negative-price clause active on hour set $`\mathcal{H}_{\text{clause}}`$ ($`\mathcal{H}_{\text{zero}} = \{t : P_t < 0\}`$
+for a strict zero-price floor, or $`\mathcal{H}_{6\text{h}} = \{t : t \text{ belongs to a run of } \ge 6 \text{ consecutive hours with } P_t < 0\}`$
 for the EU CfD 6-hour rule), the contractual CfD clawback is
-$\text{Floor\_Clawback} = \sum_{t \in \mathcal{H}_{\text{clause}}} V_t (S - P_t)$, satisfying the exact accounting
+$`\text{Floor\_Clawback} = \sum_{t \in \mathcal{H}_{\text{clause}}} V_t (S - P_t)`$, satisfying the exact accounting
 identity across all structures and years:
 
 ```math
 \text{Seller\_CfD\_Payout} + \text{Spot\_Revenue\_at\_Capture} = S \cdot E_{\text{settled}} + \text{Profile\_Gap} - \text{Floor\_Clawback}
 ```
 
-When the generator curtails physical output during $t \in \mathcal{H}_{\text{clause}}$ to avoid paying negative spot
+When the generator curtails physical output during $`t \in \mathcal{H}_{\text{clause}}`$ to avoid paying negative spot
 prices and the buyer suspends CfD settlement during those hours, a fraction
-$\alpha = \sum_{t \in \mathcal{H}_{\text{clause}}} g_t / E_{\text{gen}}$ of annual generation earns zero revenue. To
-preserve the target annual PPA revenue $S_0 E_{\text{gen}}$ over the remaining settled volume $(1 - \alpha)E_{\text{gen}}$,
+$`\alpha = \sum_{t \in \mathcal{H}_{\text{clause}}} g_t / E_{\text{gen}}`$ of annual generation earns zero revenue. To
+preserve the target annual PPA revenue $`S_0 E_{\text{gen}}`$ over the remaining settled volume $`(1 - \alpha)E_{\text{gen}}`$,
 the fair strike price must increase by:
 
 ```math
@@ -204,9 +204,9 @@ the fair strike price must increase by:
 | Hourly PPA settlement identity (all structures, clauses & mixes) | `0.000000 PLN/MWh` | `0.000000 PLN/MWh` | `< 1e-12 PLN/MWh` |
 | Four-term decomposition bridge across all 500 bootstrap years | `0.000000 PLN/MWh` | `0.000000 PLN/MWh` | `< 1e-12 PLN/MWh` |
 | Hourly surplus minus deficit identity (`Surplus_Rev - Deficit_Cost`) | `0.000000 PLN/MWh` | `0.000000 PLN/MWh` | `< 1e-12 PLN/MWh` |
-| Harmonic diurnal process ($P_0 = 435$, $A_P = 391.5$, $\alpha_g = 0.8$, $\phi = \pi$): $P_{\text{cap}}$ | `278.400000 PLN/MWh` | `278.400000 PLN/MWh` | `< 1e-12 PLN/MWh` |
-| Harmonic diurnal process: shape risk $\frac{1}{2}\alpha_g A_P \cos\phi$ | `-156.600000 PLN/MWh` | `-156.600000 PLN/MWh` | `< 1e-12 PLN/MWh` |
-| Bivariate Gaussian process ($\sigma_E = 0.10$, $\sigma_P = 45.0$, $\rho = -0.60$): $\mathrm{Cov}(E_{\text{gen}}/E_c, P_{\text{cap}} - \bar{P})$ | `-2.700000 PLN/MWh` | `-2.700000 PLN/MWh` | `< 1e-12 PLN/MWh` |
+| Harmonic diurnal process ($`P_0 = 435`$, $`A_P = 391.5`$, $`\alpha_g = 0.8`$, $`\phi = \pi`$): $`P_{\text{cap}}`$ | `278.400000 PLN/MWh` | `278.400000 PLN/MWh` | `< 1e-12 PLN/MWh` |
+| Harmonic diurnal process: shape risk $`\frac{1}{2}\alpha_g A_P \cos\phi`$ | `-156.600000 PLN/MWh` | `-156.600000 PLN/MWh` | `< 1e-12 PLN/MWh` |
+| Bivariate Gaussian process ($`\sigma_E = 0.10`$, $`\sigma_P = 45.0`$, $`\rho = -0.60`$): $`\mathrm{Cov}(E_{\text{gen}}/E_c, P_{\text{cap}} - \bar{P})`$ | `-2.700000 PLN/MWh` | `-2.700000 PLN/MWh` | `< 1e-12 PLN/MWh` |
 
 ## Run it
 
