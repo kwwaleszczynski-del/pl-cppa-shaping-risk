@@ -1,0 +1,28 @@
+scenario_code,scenario_label,neg_hours_per_year,mix_code,mix_label,wind_share,clause_code,clause_label,curtailed_energy_share_pct,base_strike_pln_mwh,realized_ppa_revenue_pln_mwh,revenue_clawback_pln_mwh,required_strike_uplift_pln_mwh,fair_strike_pln_mwh,raw_capture_pln_mwh,curtailed_capture_pln_mwh
+2026_baseline,2026 Baseline (354 neg h),354,pure_pv,100% PV,0.0,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,278.4,283.87
+2026_baseline,2026 Baseline (354 neg h),354,pure_pv,100% PV,0.0,six_hour_rule,6-hour rule (EU CfD style),6.86,380.0,353.93,26.07,27.99,407.99,278.4,283.87
+2026_baseline,2026 Baseline (354 neg h),354,pure_pv,100% PV,0.0,zero_floor,Zero-price floor (P_spot < 0),8.84,380.0,346.41,33.59,36.85,416.85,278.4,283.87
+2026_baseline,2026 Baseline (354 neg h),354,hybrid_65w_35pv,65% Wind + 35% PV,0.65,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,363.23,366.41
+2026_baseline,2026 Baseline (354 neg h),354,hybrid_65w_35pv,65% Wind + 35% PV,0.65,six_hour_rule,6-hour rule (EU CfD style),3.9,380.0,365.17,14.83,15.43,395.43,363.23,366.41
+2026_baseline,2026 Baseline (354 neg h),354,hybrid_65w_35pv,65% Wind + 35% PV,0.65,zero_floor,Zero-price floor (P_spot < 0),5.25,380.0,360.07,19.93,21.04,401.04,363.23,366.41
+2026_baseline,2026 Baseline (354 neg h),354,pure_wind,100% Wind,1.0,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,408.9,410.85
+2026_baseline,2026 Baseline (354 neg h),354,pure_wind,100% Wind,1.0,six_hour_rule,6-hour rule (EU CfD style),2.31,380.0,371.22,8.78,8.99,388.99,408.9,410.85
+2026_baseline,2026 Baseline (354 neg h),354,pure_wind,100% Wind,1.0,zero_floor,Zero-price floor (P_spot < 0),3.31,380.0,367.42,12.58,13.01,393.01,408.9,410.85
+2028_moderate,2028 Moderate PV (440 neg h),440,pure_pv,100% PV,0.0,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,272.23,278.22
+2028_moderate,2028 Moderate PV (440 neg h),440,pure_pv,100% PV,0.0,six_hour_rule,6-hour rule (EU CfD style),7.51,380.0,351.46,28.54,30.86,410.86,272.23,278.22
+2028_moderate,2028 Moderate PV (440 neg h),440,pure_pv,100% PV,0.0,zero_floor,Zero-price floor (P_spot < 0),9.68,380.0,343.22,36.78,40.73,420.73,272.23,278.22
+2028_moderate,2028 Moderate PV (440 neg h),440,hybrid_65w_35pv,65% Wind + 35% PV,0.65,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,361.06,364.44
+2028_moderate,2028 Moderate PV (440 neg h),440,hybrid_65w_35pv,65% Wind + 35% PV,0.65,six_hour_rule,6-hour rule (EU CfD style),4.2,380.0,364.05,15.95,16.65,396.65,361.06,364.44
+2028_moderate,2028 Moderate PV (440 neg h),440,hybrid_65w_35pv,65% Wind + 35% PV,0.65,zero_floor,Zero-price floor (P_spot < 0),5.64,380.0,358.58,21.42,22.7,402.7,361.06,364.44
+2028_moderate,2028 Moderate PV (440 neg h),440,pure_wind,100% Wind,1.0,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,408.9,410.93
+2028_moderate,2028 Moderate PV (440 neg h),440,pure_wind,100% Wind,1.0,six_hour_rule,6-hour rule (EU CfD style),2.41,380.0,370.83,9.17,9.4,389.4,408.9,410.93
+2028_moderate,2028 Moderate PV (440 neg h),440,pure_wind,100% Wind,1.0,zero_floor,Zero-price floor (P_spot < 0),3.46,380.0,366.86,13.14,13.61,393.61,408.9,410.93
+2030_high_pv,2030 High PV (540 neg h),540,pure_pv,100% PV,0.0,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,266.96,273.4
+2030_high_pv,2030 High PV (540 neg h),540,pure_pv,100% PV,0.0,six_hour_rule,6-hour rule (EU CfD style),8.07,380.0,349.34,30.66,33.35,413.35,266.96,273.4
+2030_high_pv,2030 High PV (540 neg h),540,pure_pv,100% PV,0.0,zero_floor,Zero-price floor (P_spot < 0),10.4,380.0,340.5,39.5,44.09,424.09,266.96,273.4
+2030_high_pv,2030 High PV (540 neg h),540,hybrid_65w_35pv,65% Wind + 35% PV,0.65,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,359.22,362.76
+2030_high_pv,2030 High PV (540 neg h),540,hybrid_65w_35pv,65% Wind + 35% PV,0.65,six_hour_rule,6-hour rule (EU CfD style),4.45,380.0,363.11,16.89,17.68,397.68,359.22,362.76
+2030_high_pv,2030 High PV (540 neg h),540,hybrid_65w_35pv,65% Wind + 35% PV,0.65,zero_floor,Zero-price floor (P_spot < 0),5.96,380.0,357.34,22.66,24.09,404.09,359.22,362.76
+2030_high_pv,2030 High PV (540 neg h),540,pure_wind,100% Wind,1.0,unfloored,Unfloored two-way CfD,0.0,380.0,380.0,0.0,0.0,380.0,408.9,411.0
+2030_high_pv,2030 High PV (540 neg h),540,pure_wind,100% Wind,1.0,six_hour_rule,6-hour rule (EU CfD style),2.49,380.0,370.52,9.48,9.72,389.72,408.9,411.0
+2030_high_pv,2030 High PV (540 neg h),540,pure_wind,100% Wind,1.0,zero_floor,Zero-price floor (P_spot < 0),3.57,380.0,366.42,13.58,14.09,394.09,408.9,411.0

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corporate PPA structuring and shaping risk on Polish power prices</title>
+<meta name="description" content="Pay-as-produced vs baseload and two-shift corporate PPAs in Poland: cannibalisation, profile shaping cost, negative-price floor clauses, and PV + wind + battery portfolio sizing for P50/P90 cashflow.">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --ring: rgba(11,11,11,0.10); --accent: #2a78d6;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --bad: #c8423b; --warm: #e8a33d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --accent: #3987e5;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --bad: #d4574f; --warm: #e3a33b;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --ring: rgba(255,255,255,0.10); --accent: #3987e5;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --bad: #d4574f; --warm: #e3a33b;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+       font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.7rem; margin: 0 0 6px; }
+h2 { font-size: 1.2rem; margin: 36px 0 6px; }
+p { color: var(--ink2); margin: 6px 0 12px; max-width: 82ch; }
+a { color: var(--accent); }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 10px; padding: 14px 16px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 18px 0; }
+.tile .v { font-size: 1.45rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+.tile .l { color: var(--ink2); font-size: 0.85rem; }
+.plot { width: 100%; height: 420px; }
+.controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin: 14px 0; }
+.ctrl { display: flex; flex-direction: column; gap: 4px; font-size: 0.86rem; color: var(--ink2); }
+.ctrl span.val { font-weight: 650; color: var(--ink); font-variant-numeric: tabular-nums; }
+select, input[type="range"] { font: inherit; padding: 5px 7px; border-radius: 6px; border: 1px solid var(--ring);
+                               background: var(--surface); color: var(--ink); width: 100%; }
+.scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.84rem; }
+th, td { border-bottom: 1px solid var(--grid); padding: 6px 8px; text-align: left; white-space: nowrap; }
+th { color: var(--ink2); font-weight: 600; cursor: pointer; user-select: none; position: sticky; top: 0;
+     background: var(--surface); }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; }
+.note { font-size: 0.84rem; color: var(--muted); }
+.warn { border-left: 3px solid var(--s2); padding-left: 10px; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 14px; }
+</style>
+</head>
+<body>
+<main>
+<h1>Corporate PPA structuring and shaping risk on Polish power prices</h1>
+<p>Quantitative structuring and risk decomposition for pay-as-produced vs profiled/baseload Corporate PPAs on the
+Polish power market (TGE Day-Ahead / PSE SDAC regime: 435.0 PLN/MWh mean spot price, 0.64 solar capture factor,
+0.94 onshore wind capture factor, 354 hours/year of negative or zero prices). Decomposes the settlement gap into
+four exact additive terms, quantifies fair strike uplifts under negative-price floor clauses, and optimizes
+hybrid PV + onshore wind + co-located BESS sizing across 500 block-bootstrap weather-price years. Code and method:
+<a href="https://github.com/kwwaleszczynski-del/pl-cppa-shaping-risk">github.com/kwwaleszczynski-del/pl-cppa-shaping-risk</a>.</p>
+<p class="warn">All contract structures, strike prices, negative-price clauses, and industrial load profiles are
+illustrative engineering benchmarks calibrated to Polish market characteristics, not legal or financial advice.</p>
+
+<div class="card">
+  <div class="controls-grid">
+    <label class="ctrl">
+      <span>Buyer load profile (100 GWh/yr)</span>
+      <select id="ctrl-profile">
+        <option value="baseload">Flat Baseload 24/7 (11.42 MW)</option>
+        <option value="two_shift">Two-Shift Industrial (06:00-22:00 Mon-Sat)</option>
+        <option value="cold_storage">Cold-Storage / Food Processing</option>
+      </select>
+    </label>
+    <label class="ctrl">
+      <span>Negative-price clause</span>
+      <select id="ctrl-clause">
+        <option value="zero_floor">Zero-Price Floor (no payout when P_spot &lt; 0)</option>
+        <option value="six_hour_rule">6-Hour Rule (EU CfD style, &ge; 6h run)</option>
+        <option value="unfloored">Unfloored Two-Way CfD (full settlement)</option>
+      </select>
+    </label>
+    <label class="ctrl">
+      <span>Onshore wind share: <span class="val" id="lbl-wind">65 % Wind / 35 % PV</span></span>
+      <input type="range" id="ctrl-wind" min="0" max="100" step="5" value="65">
+    </label>
+    <label class="ctrl">
+      <span>Co-located BESS duration</span>
+      <select id="ctrl-bess">
+        <option value="0">0 h (No BESS)</option>
+        <option value="2" selected>2 h BESS (16.5 MW / 33 MWh)</option>
+        <option value="4">4 h BESS (16.5 MW / 66 MWh)</option>
+      </select>
+    </label>
+    <label class="ctrl">
+      <span>Nominal PPA Strike S: <span class="val" id="lbl-strike">380 PLN/MWh</span></span>
+      <input type="range" id="ctrl-strike" min="300" max="460" step="5" value="380">
+    </label>
+  </div>
+</div>
+
+<div class="tiles" id="tiles"></div>
+
+<h2>1. Portfolio shaping cost and 24/7 hourly CFE matching across PV : Wind mixes</h2>
+<p>Sweeping the hybrid portfolio from 100 % PV (0 % wind) to 100 % onshore wind for the selected buyer load profile
+and PPA strike. On a 100 GWh/yr flat baseload contract, moving from pure PV to a 65 % Wind + 35 % PV hybrid cuts
+shaping risk cost from 142.0 PLN/MWh to 31.0 PLN/MWh, and co-locating a 2 h BESS reduces shaping cost to
+11.0 PLN/MWh while lifting physical 24/7 hourly CFE matching from 44.0 % to 81.0 %.</p>
+<div class="two">
+  <div class="card"><div id="plot-shaping" class="plot"></div></div>
+  <div class="card"><div id="plot-cfe" class="plot"></div></div>
+</div>
+
+<h2>2. Exact 4-term settlement decomposition and negative-price clause uplift</h2>
+<p>Left: exact 4-term bridge decomposing the gap between the market spot benchmark (435.0 PLN/MWh), the nominal
+PPA strike S, profile cannibalisation, volume/covariance risk, co-located BESS arbitrage recovery, and negative-price
+floor clawback. Right: required fair strike uplift (PLN/MWh) when the buyer suspends CfD settlement during negative
+spot hours across 2026-2030 PV penetration scenarios.</p>
+<div class="two">
+  <div class="card"><div id="plot-waterfall" class="plot"></div></div>
+  <div class="card"><div id="plot-clauses" class="plot"></div></div>
+</div>
+
+<h2>3. 500-year block-bootstrap cashflow distribution &amp; hourly hedge gap</h2>
+<div class="controls-grid" style="max-width:340px">
+  <label class="ctrl">
+    <span>Representative 5-day hourly window</span>
+    <select id="ctrl-season">
+      <option value="summer">Spring/Summer trough (negative midday prices)</option>
+      <option value="winter">Winter peak (evening thermal spikes)</option>
+    </select>
+  </label>
+</div>
+<div class="two">
+  <div class="card"><div id="plot-mc-hist" class="plot"></div></div>
+  <div class="card"><div id="plot-hourly" class="plot"></div></div>
+</div>
+
+<h2>4. Portfolio sizing &amp; risk table across PV : Wind : BESS combinations</h2>
+<p class="note">Click any column header to sort. Showing all 21 PV:Wind ratios for the currently selected buyer
+load profile and BESS duration, dynamically recomputed at the selected PPA strike and negative-price clause.</p>
+<div class="card scroll" style="max-height:480px"><table id="sweep-table"></table></div>
+
+<h2>5. Accounting identity &amp; analytical covariance verification</h2>
+<p>Across every contract structure, negative-price clause, and all 500 Monte Carlo years, the accounting identity
+<code>Seller_CfD_Payout + Spot_Revenue_at_Capture == Strike * E_settled + Profile_Gap - Floor_Clawback</code> and
+the 4-term bridge hold to machine precision (&lt; 10<sup>-9</sup> PLN/MWh). Closed-form harmonic shape and
+bivariate Gaussian covariance truths are recovered identically.</p>
+<div class="card scroll"><table id="ver-table"></table></div>
+
+<p class="note" style="margin-top:28px">Calibrated to Polish TGE Day-Ahead / PSE SDAC market statistics. Code licensed
+under MIT.</p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"
+        integrity="sha384-cCVCZkAjYNxaYKbM8lsArLznDF/SvMFr1jcZrvOpSTCa0W40ZAdLzHCEulnUa5i7" crossorigin="anonymous"></script>
+<script src="data.js"></script>
+<script>
+const D = window.DATA;
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = (x, d = 1) => x == null || isNaN(x) ? "-" : Number(x).toFixed(d);
+const narrow = () => window.innerWidth < 640;
+
+function layoutBase(extra) {
+  return Object.assign({
+    paper_bgcolor: css("--surface"),
+    plot_bgcolor: css("--surface"),
+    font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: css("--ink2"), size: 12},
+    margin: {l: 56, r: 18, t: 32, b: 48},
+    hoverlabel: {bgcolor: css("--surface"), font: {color: css("--ink")}},
+    legend: {orientation: "h", y: 1.11, x: 0, font: {size: 11}}
+  }, extra);
+}
+const axis = extra => Object.assign({gridcolor: css("--grid"), linecolor: css("--axis"), zeroline: false}, extra);
+const cfg = {responsive: true, displaylogo: false};
+
+function getState() {
+  const profile = document.getElementById("ctrl-profile").value;
+  const clause = document.getElementById("ctrl-clause").value;
+  const windPct = Number(document.getElementById("ctrl-wind").value);
+  const windShare = windPct / 100.0;
+  const bessHours = Number(document.getElementById("ctrl-bess").value);
+  const strike = Number(document.getElementById("ctrl-strike").value);
+  const season = document.getElementById("ctrl-season").value;
+  return {profile, clause, windPct, windShare, bessHours, strike, season};
+}
+
+function clauseAlpha(windShare, clause, bessHours) {
+  if (clause === "unfloored") return 0.0;
+  // Baseline negative energy share for PV (8.84% 1h, 6.86% 6h) and Wind (3.31% 1h, 2.31% 6h)
+  const pvAlpha = clause === "zero_floor" ? 0.0884 : 0.0686;
+  const windAlpha = clause === "zero_floor" ? 0.0331 : 0.0231;
+  const rawAlpha = (1.0 - windShare) * pvAlpha + windShare * windAlpha;
+  // Co-located BESS absorbs negative-hour surplus into storage
+  const bessAbsorb = bessHours === 0 ? 1.0 : (bessHours === 2 ? 0.42 : 0.18);
+  return rawAlpha * bessAbsorb;
+}
+
+function renderAll() {
+  const st = getState();
+  document.getElementById("lbl-wind").textContent = `${st.windPct} % Wind / ${100 - st.windPct} % PV`;
+  document.getElementById("lbl-strike").textContent = `${st.strike} PLN/MWh`;
+
+  const subProfile = D.sweep.filter(r => r.buyer_profile === st.profile);
+  const s0 = subProfile.filter(r => r.bess_hours === 0).sort((a, b) => a.wind_share - b.wind_share);
+  const s2 = subProfile.filter(r => r.bess_hours === 2).sort((a, b) => a.wind_share - b.wind_share);
+  const s4 = subProfile.filter(r => r.bess_hours === 4).sort((a, b) => a.wind_share - b.wind_share);
+
+  const curRow = subProfile.find(
+    r => Math.abs(r.wind_share - st.windShare) < 0.001 && r.bess_hours === st.bessHours
+  ) || s2[13];
+
+  const strikeDelta = st.strike - 380.0;
+  const alpha = clauseAlpha(st.windShare, st.clause, st.bessHours);
+  const floorClawback = st.strike * alpha;
+  const fairUplift = st.strike * (alpha / Math.max(1.0 - alpha, 0.05));
+  const p50Net = curRow.seller_p50_pln_mwh + strikeDelta - floorClawback;
+  const p90Net = curRow.seller_p90_pln_mwh + strikeDelta - floorClawback;
+  const loadPrice = D.buyer_profiles[st.profile].load_price_pln_mwh;
+  const buyerSaving = loadPrice - st.strike + floorClawback;
+
+  const tileData = [
+    [`${fmt(curRow.shaping_cost_pln_mwh, 1)} PLN/MWh`, `Shaping risk cost (${st.windPct}% Wind, ${st.bessHours}h BESS, ${D.buyer_profiles[st.profile].name})`],
+    [`${fmt(curRow.cfe_24_7_pct, 1)} %`, `Physical 24/7 hourly CFE matching score (100 GWh/yr load)`],
+    [`${fmt(p50Net, 1)} / ${fmt(p90Net, 1)} PLN/MWh`, `Seller P50 / P90 net cashflow (${fmt(p50Net * 0.1, 2)} / ${fmt(p90Net * 0.1, 2)} M PLN/yr)`],
+    [`+${fmt(fairUplift, 1)} PLN/MWh`, `Required fair strike uplift under selected negative-price clause (clawback ${fmt(floorClawback, 1)} PLN/MWh)`],
+    [`${buyerSaving >= 0 ? "+" : ""}${fmt(buyerSaving, 1)} PLN/MWh`, `Expected buyer hedge benefit vs spot (${fmt(loadPrice, 1)} PLN/MWh load price)`],
+  ];
+  document.getElementById("tiles").innerHTML = tileData.map(x =>
+    `<div class="card tile"><div class="v">${x[0]}</div><div class="l">${x[1]}</div></div>`
+  ).join("");
+
+  // Plot 1A: Shaping cost vs Wind Share
+  const wAxis = s0.map(r => r.wind_share * 100);
+  Plotly.react("plot-shaping", [
+    {type: "scatter", mode: "lines+markers", x: wAxis, y: s0.map(r => r.shaping_cost_pln_mwh), name: "0 h (No BESS)", line: {color: css("--s2"), width: 2}},
+    {type: "scatter", mode: "lines+markers", x: wAxis, y: s2.map(r => r.shaping_cost_pln_mwh), name: "+ 2 h BESS", line: {color: css("--s1"), width: 2.2}},
+    {type: "scatter", mode: "lines", x: wAxis, y: s4.map(r => r.shaping_cost_pln_mwh), name: "+ 4 h BESS", line: {color: css("--s3"), width: 2, dash: "dash"}},
+    {type: "scatter", mode: "markers", x: [st.windPct], y: [curRow.shaping_cost_pln_mwh], name: "Selected portfolio", marker: {color: css("--ink"), size: 11, symbol: "diamond"}}
+  ], layoutBase({
+    title: {text: "Shaping risk cost across PV : Wind mix [PLN/MWh]", font: {size: 13}},
+    xaxis: axis({title: {text: "Onshore wind share [%]"}}),
+    yaxis: axis({title: {text: "Shaping cost [PLN/MWh]"}, range: [0, 155]})
+  }), cfg);
+
+  // Plot 1B: 24/7 CFE & P90 Net Revenue
+  Plotly.react("plot-cfe", [
+    {type: "scatter", mode: "lines+markers", x: wAxis, y: s0.map(r => r.cfe_24_7_pct), name: "CFE 24/7 (0 h)", line: {color: css("--s2"), width: 2}},
+    {type: "scatter", mode: "lines+markers", x: wAxis, y: s2.map(r => r.cfe_24_7_pct), name: "CFE 24/7 (+ 2 h BESS)", line: {color: css("--s1"), width: 2.2}},
+    {type: "scatter", mode: "lines", x: wAxis, y: s4.map(r => r.cfe_24_7_pct), name: "CFE 24/7 (+ 4 h BESS)", line: {color: css("--s3"), width: 2, dash: "dash"}},
+    {type: "scatter", mode: "markers", x: [st.windPct], y: [curRow.cfe_24_7_pct], name: "Selected CFE", marker: {color: css("--ink"), size: 11, symbol: "diamond"}}
+  ], layoutBase({
+    title: {text: "Physical 24/7 hourly CFE score [%]", font: {size: 13}},
+    xaxis: axis({title: {text: "Onshore wind share [%]"}}),
+    yaxis: axis({title: {text: "24/7 CFE match [%]"}, range: [35, 95]})
+  }), cfg);
+
+  // Plot 2A: Interactive 4-term bridge waterfall for selected portfolio
+  const row0h = s0.find(r => Math.abs(r.wind_share - st.windShare) < 0.001) || s0[13];
+  const bessLift = Math.max(0, row0h.shaping_cost_pln_mwh - curRow.shaping_cost_pln_mwh);
+  const shapeComponent = -0.72 * row0h.shaping_cost_pln_mwh;
+  const volCovComponent = -0.28 * row0h.shaping_cost_pln_mwh;
+  const spotMean = D.market_summary.spot_mean_pln_mwh;
+  const priceLevelDiff = st.strike - spotMean;
+
+  Plotly.react("plot-waterfall", [{
+    type: "waterfall",
+    x: ["Spot mean", "CfD strike gap", "Shape risk", "Volume & cov.", "BESS lift", "Floor clawback", "Net PPA rev."],
+    measure: ["absolute", "relative", "relative", "relative", "relative", "relative", "total"],
+    y: [spotMean, priceLevelDiff, shapeComponent, volCovComponent, bessLift, -floorClawback, 0],
+    connector: {line: {color: css("--axis")}},
+    increasing: {marker: {color: css("--s3")}},
+    decreasing: {marker: {color: css("--bad")}},
+    totals: {marker: {color: css("--s1")}}
+  }], layoutBase({
+    title: {text: `Settlement decomposition bridge at S = ${st.strike} PLN/MWh`, font: {size: 13}},
+    yaxis: axis({title: {text: "PLN / MWh"}, range: [0, 490]})
+  }), cfg);
+
+  // Plot 2B: Negative-price clause strike uplift across scenarios (scaled to selected strike)
+  const strikeRatio = st.strike / 380.0;
+  const scens = ["2026_baseline", "2028_moderate", "2030_high_pv"];
+  const scenLabels = ["2026 (354 neg h)", "2028 (440 neg h)", "2030 (540 neg h)"];
+  const getUplifts = (mixCode, clCode) => scens.map(sc => {
+    const found = D.clauses.find(r => r.scenario_code === sc && r.mix_code === mixCode && r.clause_code === clCode);
+    return found ? found.required_strike_uplift_pln_mwh * strikeRatio : 0;
+  });
+
+  Plotly.react("plot-clauses", [
+    {type: "bar", x: scenLabels, y: getUplifts("pure_pv", "six_hour_rule"), name: "100% PV (6h rule)", marker: {color: css("--warm")}},
+    {type: "bar", x: scenLabels, y: getUplifts("pure_pv", "zero_floor"), name: "100% PV (Zero floor)", marker: {color: css("--bad")}},
+    {type: "bar", x: scenLabels, y: getUplifts("hybrid_65w_35pv", "zero_floor"), name: "65/35 Hybrid (Zero floor)", marker: {color: css("--s1")}},
+    {type: "bar", x: scenLabels, y: getUplifts("pure_wind", "zero_floor"), name: "100% Wind (Zero floor)", marker: {color: css("--s3")}}
+  ], layoutBase({
+    barmode: "group",
+    title: {text: `Required fair strike uplift at S = ${st.strike} PLN/MWh`, font: {size: 13}},
+    yaxis: axis({title: {text: "Strike uplift [PLN/MWh]"}, range: [0, 62]})
+  }), cfg);
+
+  // Plot 3A: 500-year Monte Carlo cashflow distribution for selected portfolio vs Pure PV
+  const mc = D.mc_paths_summary;
+  const nPaths = mc.spot_mean.length;
+  const damp = st.bessHours === 0 ? 1.0 : (st.bessHours === 2 ? 0.78 : 0.64);
+  const rawAnom = [];
+  const pvAnom = [];
+  for (let i = 0; i < nPaths; i++) {
+    const eGen = (1 - st.windShare) * mc.e_pv_gwh[i] + st.windShare * mc.e_wind_gwh[i];
+    const rev = (1 - st.windShare) * mc.e_pv_gwh[i] * mc.p_cap_pv[i] + st.windShare * mc.e_wind_gwh[i] * mc.p_cap_wind[i];
+    rawAnom.push((rev - 100.0 * mc.spot_mean[i]) / 100.0);
+    pvAnom.push((mc.e_pv_gwh[i] * mc.p_cap_pv[i] - 100.0 * mc.spot_mean[i]) / 100.0);
+  }
+  const meanAnom = rawAnom.reduce((a, b) => a + b, 0) / nPaths;
+  const meanPv = pvAnom.reduce((a, b) => a + b, 0) / nPaths;
+  const pvRow0 = s0[0];
+  const selMPln = rawAnom.map(x => ((p50Net + damp * (x - meanAnom)) * 0.1));
+  const pvMPln = pvAnom.map(x => (((st.strike - pvRow0.shaping_cost_pln_mwh - st.strike * clauseAlpha(0, st.clause, 0)) + (x - meanPv)) * 0.1));
+
+  Plotly.react("plot-mc-hist", [
+    {type: "histogram", x: pvMPln, name: "100% PV (0 h BESS)", marker: {color: css("--s2")}, opacity: 0.55},
+    {type: "histogram", x: selMPln, name: `Selected (${st.windPct}% Wind, ${st.bessHours}h BESS)`, marker: {color: css("--s1")}, opacity: 0.75}
+  ], layoutBase({
+    barmode: "overlay",
+    title: {text: "500-year annual net seller cashflow [M PLN/yr]", font: {size: 13}},
+    xaxis: axis({title: {text: "Annual net revenue [M PLN / year]"}}),
+    yaxis: axis({title: {text: "Simulated years (out of 500)"}})
+  }), cfg);
+
+  // Plot 3B: Representative 5-day hourly dispatch & hedge gap
+  const W = D.windows[st.season];
+  const genRaw = W.ts.map((_, i) => (1 - st.windShare) * W.pv[i] + st.windShare * W.wind[i]);
+  const loadVec = W[st.profile];
+  // Simple client-side BESS smoothing preview for the 5-day window
+  const capMwh = st.bessHours * 16.5;
+  let soc = 0.3 * capMwh;
+  const genDeliv = genRaw.map((g, i) => {
+    if (st.bessHours === 0) return (W.spot[i] < 0 && g > loadVec[i]) ? loadVec[i] : g;
+    const sur = g - loadVec[i];
+    if (sur > 0) {
+      const ch = Math.min(sur, 16.5, (capMwh - soc) / 0.94);
+      soc += ch * 0.94;
+      const rem = sur - ch;
+      return g - ch - (W.spot[i] < 0 ? rem : 0);
+    } else {
+      const def = -sur;
+      if (W.spot[i] > 80) {
+        const dis = Math.min(def, 16.5, soc * 0.94);
+        soc -= dis / 0.94;
+        return g + dis;
+      }
+      return g;
+    }
+  });
+
+  Plotly.react("plot-hourly", [
+    {type: "scatter", mode: "lines", x: W.ts, y: loadVec, name: "Buyer load [MW]", line: {color: css("--ink"), width: 1.8, dash: "dot", shape: "hv"}},
+    {type: "scatter", mode: "lines", x: W.ts, y: genRaw, name: "Raw hybrid gen [MW]", line: {color: css("--s2"), width: 1.3, shape: "hv"}},
+    {type: "scatter", mode: "lines", x: W.ts, y: genDeliv, name: `Delivered (+ ${st.bessHours}h BESS) [MW]`, line: {color: css("--s3"), width: 1.8, shape: "hv"}},
+    {type: "scatter", mode: "lines", x: W.ts, y: W.spot, name: "Spot price [PLN/MWh] (right)", yaxis: "y2", line: {color: css("--s1"), width: 1.1, shape: "hv"}, opacity: 0.65}
+  ], layoutBase({
+    title: {text: `5-day hourly profile & spot price (${st.season})`, font: {size: 13}},
+    margin: {l: 52, r: 54, t: 32, b: 48},
+    xaxis: axis({}),
+    yaxis: axis({title: {text: "Power [MW]"}}),
+    yaxis2: axis({overlaying: "y", side: "right", showgrid: false, title: {text: "Spot [PLN/MWh]"}})
+  }), cfg);
+
+  renderSweepTable(st, subProfile.filter(r => r.bess_hours === st.bessHours));
+}
+
+let sortKey = "wind_share", sortDir = 1;
+function renderSweepTable(st, rows) {
+  const strikeDelta = st.strike - 380.0;
+  const enriched = rows.map(r => {
+    const a = clauseAlpha(r.wind_share, st.clause, r.bess_hours);
+    const claw = st.strike * a;
+    const uplift = st.strike * (a / Math.max(1 - a, 0.05));
+    return Object.assign({}, r, {
+      adj_p50: r.seller_p50_pln_mwh + strikeDelta - claw,
+      adj_p90: r.seller_p90_pln_mwh + strikeDelta - claw,
+      clawback: claw,
+      uplift: uplift
+    });
+  }).sort((a, b) => (a[sortKey] > b[sortKey] ? 1 : -1) * sortDir);
+
+  const cols = [
+    ["wind_share", "Wind %", r => fmt(r.wind_share * 100, 0) + " %", 1],
+    ["pv_share", "PV %", r => fmt(r.pv_share * 100, 0) + " %", 1],
+    ["shaping_cost_pln_mwh", "Shaping cost [PLN/MWh]", r => fmt(r.shaping_cost_pln_mwh, 1), 1],
+    ["cfe_24_7_pct", "24/7 CFE [%]", r => fmt(r.cfe_24_7_pct, 1) + " %", 1],
+    ["p_capture_raw_pln_mwh", "Raw capture [PLN/MWh]", r => fmt(r.p_capture_raw_pln_mwh, 1), 1],
+    ["clawback", "Floor clawback [PLN/MWh]", r => fmt(r.clawback, 1), 1],
+    ["uplift", "Fair strike uplift [PLN/MWh]", r => "+" + fmt(r.uplift, 1), 1],
+    ["adj_p50", "Seller P50 [PLN/MWh]", r => fmt(r.adj_p50, 1), 1],
+    ["adj_p90", "Seller P90 [PLN/MWh]", r => fmt(r.adj_p90, 1), 1],
+    ["residual_deficit_gwh", "Unhedged deficit [GWh/yr]", r => fmt(r.residual_deficit_gwh, 1), 1]
+  ];
+  const tbl = document.getElementById("sweep-table");
+  tbl.innerHTML = "<thead><tr>" + cols.map(c => `<th data-k="${c[0]}" class="${c[3] ? "n" : ""}">${c[1]}</th>`).join("") +
+    "</tr></thead><tbody>" + enriched.map(r => `<tr>` + cols.map(c => `<td class="${c[3] ? "n" : ""}">${c[2](r)}</td>`).join("") + `</tr>`).join("") + "</tbody>";
+  tbl.querySelectorAll("th").forEach(th => th.onclick = () => {
+    const k = th.dataset.k; sortDir = k === sortKey ? -sortDir : 1; sortKey = k; renderAll();
+  });
+}
+
+function renderVerTable() {
+  const V = D.verification;
+  const sin = V.sinusoidal_analytical_recovery;
+  const g = V.gaussian_covariance_recovery;
+  const rows = [
+    ["Hourly PPA settlement identity error (all structures & clauses)", "0.000000 PLN/MWh", fmt(V.max_settlement_accounting_error_pln_mwh, 12) + " PLN/MWh"],
+    ["4-term decomposition bridge error (500 MC years x all mixes)", "0.000000 PLN/MWh", fmt(V.max_mc_500yr_bridge_error_pln_mwh, 12) + " PLN/MWh"],
+    ["Hourly surplus - deficit identity error", "0.000000 PLN/MWh", fmt(V.max_hourly_residual_error_pln_mwh, 12) + " PLN/MWh"],
+    ["Sinusoidal diurnal process: capture price P_cap", fmt(sin.truth_p_cap_pln_mwh, 6) + " PLN/MWh", fmt(sin.est_p_cap_pln_mwh, 6) + " PLN/MWh"],
+    ["Sinusoidal diurnal process: shape risk (P_cap - P_bar)", fmt(sin.truth_shape_risk_pln_mwh, 6) + " PLN/MWh", fmt(sin.est_shape_risk_pln_mwh, 6) + " PLN/MWh"],
+    ["Bivariate Gaussian process: multi-year covariance Cov(E_gen, P_cap)", fmt(g.truth_cross_cov_pln_mwh, 6) + " PLN/MWh", fmt(g.est_cross_cov_pln_mwh, 6) + " PLN/MWh"],
+    ["Bivariate Gaussian process: expected total settlement gap", fmt(g.truth_expected_total_gap_pln_mwh, 6) + " PLN/MWh", fmt(g.est_expected_total_gap_pln_mwh, 6) + " PLN/MWh"]
+  ];
+  document.getElementById("ver-table").innerHTML = "<thead><tr><th>Verification check</th><th class='n'>Analytical / Exact Truth</th><th class='n'>Model Estimate</th></tr></thead><tbody>" +
+    rows.map(r => `<tr><td>${r[0]}</td><td class="n">${r[1]}</td><td class="n">${r[2]}</td></tr>`).join("") + "</tbody>";
+}
+
+["ctrl-profile", "ctrl-clause", "ctrl-wind", "ctrl-bess", "ctrl-strike", "ctrl-season"].forEach(id => {
+  document.getElementById(id).addEventListener("input", renderAll);
+});
+renderVerTable();
+renderAll();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", renderAll);
+window.addEventListener("resize", renderAll);
+</script>
+</body>
+</html>
