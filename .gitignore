@@ -13,3 +13,6 @@ venv/
 .coverage
 htmlcov/
 .DS_Store
+
+# PSE downloads (python -m cppa_shaping fetch)
+data/

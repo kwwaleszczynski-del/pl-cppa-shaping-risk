@@ -1,12 +1,12 @@
-"""Corporate PPA contract structures, 4-term risk decomposition, and negative-price floor clauses.
+"""Corporate PPA contract structures, 4-term settlement decomposition, and negative-price clauses.
 
 Implements:
 - Pay-as-Produced (PaP) vs Profiled / Baseload CfD settlement (`baseload`, `two_shift`, `cold_storage`)
-- Exact 4-term additive cashflow & risk decomposition (`Price Level + Shape + Volume + Cross-Term`)
-  verified to < 1e-9 PLN/MWh across every single simulated year and 500-path expectation
+- 4-term additive decomposition of the settlement gap (`Price Level + Shape + Volume + Cross-Term`), per year
+  and per bootstrap path; the terms sum to the gap by construction (checked to < 1e-9 PLN/MWh)
 - Hourly deficit vs surplus residual exposure bridge
-- Negative-price clauses (`unfloored`, `zero_floor` P_spot < 0, `six_hour_rule` EU CfD style) and
-  exact fair strike uplift formulas across PV penetration scenarios
+- Negative-price clauses (`unfloored`, `zero_floor` no CfD payment when P_spot < 0, `six_hour_rule` no payment in
+  runs of at least six consecutive negative hours) and the strike that keeps the seller's revenue unchanged
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from dataclasses import dataclass
 import numpy as np
 import pandas as pd
 
-from .market import CONTRACT_VOLUME_MWH, detect_consecutive_negative_hours
+from .market import CONTRACT_VOLUME_MWH, WINDOW_LABELS, detect_consecutive_negative_hours
 
 
 NEGATIVE_CLAUSES = ("unfloored", "zero_floor", "six_hour_rule")
@@ -68,15 +68,13 @@ class FourTermDecomposition:
     hourly_residual_error_pln_mwh: float
 
 
-def _clause_mask(spot_pln_mwh: np.ndarray, clause: str, is_neg_6h_run: np.ndarray | None = None) -> np.ndarray:
-    """Return boolean mask of hours where the negative-price clause suspends/claws back CfD payout."""
+def clause_mask(spot_pln_mwh: np.ndarray, clause: str) -> np.ndarray:
+    """Return boolean mask of hours where the negative-price clause suspends the CfD payment."""
     if clause == "unfloored":
         return np.zeros(len(spot_pln_mwh), dtype=bool)
     if clause == "zero_floor":
         return np.asarray(spot_pln_mwh) < 0.0
     if clause == "six_hour_rule":
-        if is_neg_6h_run is not None:
-            return np.asarray(is_neg_6h_run, dtype=bool)
         return detect_consecutive_negative_hours(spot_pln_mwh, min_consecutive_hours=6)
     raise ValueError(f"Unknown negative-price clause: {clause!r}. Must be one of {NEGATIVE_CLAUSES}.")
 
@@ -88,7 +86,6 @@ def settle_hourly_ppa(
     strike_pln_mwh: float = 380.0,
     structure: str = "baseload",
     clause: str = "unfloored",
-    is_neg_6h_run: np.ndarray | None = None,
 ) -> SettlementResult:
     """Settle an hourly Corporate PPA and verify the exact accounting identity.
 
@@ -112,7 +109,7 @@ def settle_hourly_ppa(
     settled_vol = gen if structure == "pay_as_produced" else load
     e_settled = float(np.sum(settled_vol))
 
-    mask = _clause_mask(spot, clause=clause, is_neg_6h_run=is_neg_6h_run)
+    mask = clause_mask(spot, clause=clause)
 
     # Unfloored CfD payout to Seller: sum_t V_t * (S - P_t)
     unfloored_cfd_hourly = settled_vol * (strike_pln_mwh - spot)
@@ -245,50 +242,37 @@ def decompose_ppa_settlement(
     )
 
 
-def decompose_mc_paths(
-    mc_df: pd.DataFrame,
-    wind_share: float = 0.65,
+def decompose_paths(
+    spot_pln_mwh: np.ndarray,
+    gen_mwh: np.ndarray,
+    load_mwh: np.ndarray,
     strike_pln_mwh: float = 380.0,
-    buyer_profile: str = "baseload",
 ) -> pd.DataFrame:
-    """Compute the exact 4-term decomposition across all 500 Monte Carlo years for any PV:Wind mix."""
-    w = float(np.clip(wind_share, 0.0, 1.0))
-    s_pv = 1.0 - w
+    """4-term decomposition for every bootstrap path at once (columns of the (T, P) price and generation arrays).
 
-    p_bar = mc_df["spot_mean_pln_mwh"].to_numpy(dtype=float)
-    e_pv = mc_df["e_pv_mwh"].to_numpy(dtype=float)
-    e_wind = mc_df["e_wind_mwh"].to_numpy(dtype=float)
-    p_cap_pv = mc_df["p_cap_pv_pln_mwh"].to_numpy(dtype=float)
-    p_cap_wind = mc_df["p_cap_wind_pln_mwh"].to_numpy(dtype=float)
+    Same terms as `decompose_ppa_settlement`, per MWh of contracted volume; `load_mwh` is the (T,) contract schedule.
+    """
+    spot = np.asarray(spot_pln_mwh, dtype=float)
+    gen = np.asarray(gen_mwh, dtype=float)
+    load = np.asarray(load_mwh, dtype=float)
 
-    e_gen = s_pv * e_pv + w * e_wind
-    rev_gen = s_pv * e_pv * p_cap_pv + w * e_wind * p_cap_wind
-    p_cap = rev_gen / e_gen
+    e_c = float(np.sum(load))
+    e_g = gen.sum(axis=0)
+    p_bar = spot.mean(axis=0)
+    p_cap = (gen * spot).sum(axis=0) / e_g
+    p_load = (load[:, None] * spot).sum(axis=0) / e_c
 
-    load_col = f"p_load_{buyer_profile}_pln_mwh"
-    p_load = mc_df[load_col].to_numpy(dtype=float)
-    e_c = CONTRACT_VOLUME_MWH
-
-    vol_rel = (e_gen - e_c) / e_c
+    vol_rel = (e_g - e_c) / e_c
     t1_price = p_bar - strike_pln_mwh
     t2_shape = p_cap - p_bar
     t3_vol = vol_rel * p_bar
     t4_cross = vol_rel * (p_cap - p_bar) + (p_bar - p_load)
-
     total_4term = t1_price + t2_shape + t3_vol + t4_cross
-    exact_gap = (e_gen * p_cap - e_c * p_load) / e_c + (p_bar - strike_pln_mwh)
-    err = np.abs(total_4term - exact_gap)
-
-    # Baseload / Profiled PPA seller net cashflow per contracted MWh:
-    # Seller receives physical spot revenue (E_gen * P_cap) + CfD settlement E_c * (S - P_load)
-    seller_baseload_pln_mwh = strike_pln_mwh + t2_shape + t3_vol + t4_cross
-    # Buyer net effective cost per MWh under Profiled PPA is Strike, or under Baseload PPA against non-flat load:
-    buyer_baseload_hedged_cost_pln_mwh = strike_pln_mwh + (p_load - p_bar)
+    exact_gap = (e_g * p_cap - e_c * p_load) / e_c + (p_bar - strike_pln_mwh)
 
     return pd.DataFrame(
         {
-            "path_id": mc_df["path_id"].to_numpy(),
-            "e_gen_mwh": e_gen,
+            "e_gen_mwh": e_g,
             "spot_mean_pln_mwh": p_bar,
             "p_capture_pln_mwh": p_cap,
             "p_load_pln_mwh": p_load,
@@ -297,10 +281,9 @@ def decompose_mc_paths(
             "volume_risk_pln_mwh": t3_vol,
             "cross_term_pln_mwh": t4_cross,
             "total_gap_pln_mwh": total_4term,
-            "exact_gap_pln_mwh": exact_gap,
-            "bridge_error_pln_mwh": err,
-            "seller_ppa_net_pln_mwh": seller_baseload_pln_mwh,
-            "buyer_hedged_cost_pln_mwh": buyer_baseload_hedged_cost_pln_mwh,
+            "bridge_error_pln_mwh": np.abs(total_4term - exact_gap),
+            # Seller revenue of a profiled CfD without storage or curtailment, per contracted MWh
+            "seller_ppa_net_pln_mwh": strike_pln_mwh + t2_shape + t3_vol + t4_cross,
         }
     )
 
@@ -309,89 +292,63 @@ def compute_strike_uplift(
     base_strike_pln_mwh: float,
     neg_energy_share: float,
 ) -> float:
-    """Compute exact fair strike uplift (PLN/MWh) when buyer suspends CfD settlement during negative spot hours.
+    """Strike uplift (PLN/MWh) that keeps annual PPA revenue unchanged when a share of output is not settled.
 
-    If a fraction `alpha = neg_energy_share` of annual generation occurs in hours where the negative-price clause
-    suspends the strike payout (and the generator curtails to avoid negative spot prices), the settled volume is
-    `(1 - alpha) * E_avail`. To achieve the same target annual PPA revenue `S_0 * E_avail`, the strike on settled
-    hours must be `S_fair = S_0 / (1 - alpha)`, giving an uplift `dS = S_0 * alpha / (1 - alpha)`.
+    If a fraction `alpha = neg_energy_share` of annual generation falls in hours where the clause suspends the
+    CfD payment (and the generator curtails rather than sell at a negative price), the settled volume is
+    `(1 - alpha) * E_avail`. Revenue `S_0 * E_avail` needs `S_fair = S_0 / (1 - alpha)` on the settled hours, an
+    uplift `dS = S_0 * alpha / (1 - alpha)`.
     """
-    alpha = float(np.clip(neg_energy_share, 0.0, 0.95))
+    alpha = float(neg_energy_share)
+    if not 0.0 <= alpha < 1.0:
+        raise ValueError(f"neg_energy_share must be in [0, 1), got {alpha}")
     return base_strike_pln_mwh * (alpha / (1.0 - alpha))
 
 
 def evaluate_negative_price_clauses(
-    df_ref: pd.DataFrame,
+    markets: dict[str, pd.DataFrame],
+    wind_shares: np.ndarray,
     base_strike_pln_mwh: float = 380.0,
 ) -> pd.DataFrame:
-    """Evaluate Unfloored, 6-Hour Rule, and Zero-Price Floor clauses across PV/Wind mixes and PV penetration regimes."""
-    spot = df_ref["spot_pln_mwh"].to_numpy(dtype=float)
-    pv = df_ref["pv_mwh"].to_numpy(dtype=float)
-    wind = df_ref["wind_mwh"].to_numpy(dtype=float)
-    neg_1h = spot < 0.0
-    neg_6h = df_ref["is_neg_6h_run"].to_numpy(dtype=bool)
+    """Pay-as-produced settlement under each negative-price clause, per analysis window and PV:wind mix.
 
-    pv_share_1h = float(np.sum(pv[neg_1h]) / np.sum(pv))
-    pv_share_6h = float(np.sum(pv[neg_6h]) / np.sum(pv))
-    wind_share_1h = float(np.sum(wind[neg_1h]) / np.sum(wind))
-    wind_share_6h = float(np.sum(wind[neg_6h]) / np.sum(wind))
-
-    # Penetration scenarios:
-    # 1. Baseline 2026 (354 neg h): calibrated reference year
-    # 2. Moderate 2028 (440 neg h): 1.10x negative-hour energy share
-    # 3. High PV 2030 (540 neg h): 1.175x negative-hour energy share (+44.0 PLN/MWh PV uplift, +14.0 PLN/MWh wind uplift)
-    scenarios = [
-        ("2026_baseline", "2026 Baseline (354 neg h)", 354, 1.000, 1.000),
-        ("2028_moderate", "2028 Moderate PV (440 neg h)", 440, 1.095, 1.045),
-        ("2030_high_pv", "2030 High PV (540 neg h)", 540, 1.176, 1.080),
-    ]
-
-    mixes = [
-        ("pure_pv", "100% PV", 0.0),
-        ("hybrid_65w_35pv", "65% Wind + 35% PV", 0.65),
-        ("pure_wind", "100% Wind", 1.0),
-    ]
-
+    In clause hours the CfD pays nothing and the generator curtails (it would otherwise sell at P < 0), so those
+    hours are settled with zero generation. The settled share and the revenue come from `settle_hourly_ppa`.
+    """
     rows = []
-    for scen_code, scen_label, neg_h, pv_mult, wind_mult in scenarios:
-        for mix_code, mix_label, w_share in mixes:
-            s_1h = (1.0 - w_share) * (pv_share_1h * pv_mult) + w_share * (wind_share_1h * wind_mult)
-            s_6h = (1.0 - w_share) * (pv_share_6h * pv_mult) + w_share * (wind_share_6h * wind_mult)
-
-            # Raw uncurtailed capture price and curtailed capture price
-            gen_mix = (1.0 - w_share) * pv + w_share * wind
-            raw_cap = float(np.sum(gen_mix * spot) / np.sum(gen_mix)) - (pv_mult - 1.0) * 65.0 * (1.0 - w_share)
-            neg_spot_loss = float(np.sum(gen_mix[neg_1h] * (-spot[neg_1h])) / np.sum(gen_mix)) * (
-                (1.0 - w_share) * pv_mult + w_share * wind_mult
-            )
-            curtailed_cap = raw_cap + neg_spot_loss
-
-            for clause_code, clause_label, alpha in [
-                ("unfloored", "Unfloored two-way CfD", 0.0),
-                ("six_hour_rule", "6-hour rule (EU CfD style)", s_6h),
-                ("zero_floor", "Zero-price floor (P_spot < 0)", s_1h),
-            ]:
+    for window, df in markets.items():
+        spot = df["spot_pln_mwh"].to_numpy(dtype=float)
+        pv = df["pv_mwh"].to_numpy(dtype=float)
+        wind = df["wind_mwh"].to_numpy(dtype=float)
+        load = df["load_baseload_mw"].to_numpy(dtype=float)
+        for w in wind_shares:
+            gen = (1.0 - w) * pv + w * wind
+            e_avail = float(np.sum(gen))
+            for clause in NEGATIVE_CLAUSES:
+                mask = clause_mask(spot, clause)
+                gen_settled = np.where(mask, 0.0, gen)
+                res = settle_hourly_ppa(spot, gen_settled, load, base_strike_pln_mwh, "pay_as_produced", clause)
+                alpha = 1.0 - res.e_settled_mwh / e_avail
                 uplift = compute_strike_uplift(base_strike_pln_mwh, alpha)
-                effective_ppa_rev = base_strike_pln_mwh * (1.0 - alpha)
                 rows.append(
                     {
-                        "scenario_code": scen_code,
-                        "scenario_label": scen_label,
-                        "neg_hours_per_year": neg_h,
-                        "mix_code": mix_code,
-                        "mix_label": mix_label,
-                        "wind_share": w_share,
-                        "clause_code": clause_code,
-                        "clause_label": clause_label,
-                        "curtailed_energy_share_pct": round(alpha * 100.0, 2),
+                        "window": window,
+                        "window_label": WINDOW_LABELS.get(window, window),
+                        "wind_share": round(float(w), 2),
+                        "clause_code": clause,
+                        "clause_hours": int(mask.sum()),
+                        "negative_price_hours": int((spot < 0.0).sum()),
+                        "unsettled_energy_share_pct": round(alpha * 100.0, 2),
                         "base_strike_pln_mwh": base_strike_pln_mwh,
-                        "realized_ppa_revenue_pln_mwh": round(effective_ppa_rev, 2),
-                        "revenue_clawback_pln_mwh": round(base_strike_pln_mwh - effective_ppa_rev, 2),
+                        "seller_revenue_pln_per_available_mwh": round(res.seller_total_revenue_pln / e_avail, 2),
                         "required_strike_uplift_pln_mwh": round(uplift, 2),
                         "fair_strike_pln_mwh": round(base_strike_pln_mwh + uplift, 2),
-                        "raw_capture_pln_mwh": round(raw_cap, 2),
-                        "curtailed_capture_pln_mwh": round(curtailed_cap, 2),
+                        # What generating through the clause hours would have cost at the negative spot price
+                        "spot_cost_if_not_curtailed_pln_mwh": round(
+                            float(-np.sum(gen[mask] * spot[mask])) / e_avail, 2
+                        ),
+                        "buyer_cost_pln_per_load_mwh": round(res.buyer_effective_pln_mwh, 2),
+                        "accounting_error_pln_mwh": res.accounting_error_pln_mwh,
                     }
                 )
-
     return pd.DataFrame(rows)

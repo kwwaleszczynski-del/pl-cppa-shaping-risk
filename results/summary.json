@@ -1,0 +1,380 @@
+{
+  "meta": {
+    "data_source": "PSE S.A. reports API (rce-pln, his-wlk-cal), www.pse.pl",
+    "reference_window": "2025",
+    "strike_pln_mwh": 380.0,
+    "bootstrap_paths": 500,
+    "bootstrap_seed": 42,
+    "bootstrap_block_hours": 168,
+    "bootstrap_window_weeks": 3,
+    "bess_power_mw": 16.5,
+    "bess_rte": 0.885,
+    "data_window": "2025-01-01..2026-09-30",
+    "retrieved_utc_first": "2026-10-30T21:01:11Z",
+    "retrieved_utc_last": "2026-10-30T21:01:39Z"
+  },
+  "market": {
+    "2025": {
+      "hours": 8760,
+      "spot_mean_pln_mwh": 441.87,
+      "pv_capture_pln_mwh": 282.74,
+      "pv_capture_factor": 0.64,
+      "wind_capture_pln_mwh": 414.29,
+      "wind_capture_factor": 0.938,
+      "negative_price_hours": 352,
+      "zero_or_negative_hours": 356,
+      "six_hour_run_hours": 191,
+      "six_hour_runs": 26,
+      "min_price_pln_mwh": -532.33,
+      "load_price_pln_mwh": {
+        "baseload": 441.87,
+        "two_shift": 466.13,
+        "cold_storage": 433.9
+      }
+    },
+    "2025_jan_sep": {
+      "hours": 6551,
+      "spot_mean_pln_mwh": 426.78,
+      "pv_capture_pln_mwh": 266.49,
+      "pv_capture_factor": 0.624,
+      "wind_capture_pln_mwh": 403.01,
+      "wind_capture_factor": 0.944,
+      "negative_price_hours": 344,
+      "zero_or_negative_hours": 348,
+      "six_hour_run_hours": 191,
+      "six_hour_runs": 26,
+      "min_price_pln_mwh": -532.33,
+      "load_price_pln_mwh": {
+        "baseload": 426.78,
+        "two_shift": 442.54,
+        "cold_storage": 416.05
+      }
+    },
+    "2026_jan_sep": {
+      "hours": 6551,
+      "spot_mean_pln_mwh": 504.89,
+      "pv_capture_pln_mwh": 298.64,
+      "pv_capture_factor": 0.591,
+      "wind_capture_pln_mwh": 481.45,
+      "wind_capture_factor": 0.954,
+      "negative_price_hours": 322,
+      "zero_or_negative_hours": 322,
+      "six_hour_run_hours": 167,
+      "six_hour_runs": 22,
+      "min_price_pln_mwh": -1416.47,
+      "load_price_pln_mwh": {
+        "baseload": 504.89,
+        "two_shift": 518.19,
+        "cold_storage": 499.21
+      }
+    }
+  },
+  "best_mixes": [
+    {
+      "buyer_profile": "baseload",
+      "bess_hours": 0,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 27.04,
+      "max_cfe_wind_share": 0.8,
+      "max_cfe_pct": 76.56,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 330.77,
+      "min_std_wind_share": 0.2,
+      "min_std_pln_mwh": 7.79
+    },
+    {
+      "buyer_profile": "baseload",
+      "bess_hours": 2,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 28.12,
+      "max_cfe_wind_share": 0.7,
+      "max_cfe_pct": 81.31,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 329.33,
+      "min_std_wind_share": 0.2,
+      "min_std_pln_mwh": 7.98
+    },
+    {
+      "buyer_profile": "baseload",
+      "bess_hours": 4,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 27.73,
+      "max_cfe_wind_share": 0.6,
+      "max_cfe_pct": 84.16,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 329.99,
+      "min_std_wind_share": 0.2,
+      "min_std_pln_mwh": 8.16
+    },
+    {
+      "buyer_profile": "two_shift",
+      "bess_hours": 0,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 51.22,
+      "max_cfe_wind_share": 0.6,
+      "max_cfe_pct": 70.92,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 305.85,
+      "min_std_wind_share": 0.15,
+      "min_std_pln_mwh": 8.91
+    },
+    {
+      "buyer_profile": "two_shift",
+      "bess_hours": 2,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 50.88,
+      "max_cfe_wind_share": 0.55,
+      "max_cfe_pct": 79.63,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 307.32,
+      "min_std_wind_share": 0.15,
+      "min_std_pln_mwh": 9.15
+    },
+    {
+      "buyer_profile": "two_shift",
+      "bess_hours": 4,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 52.55,
+      "max_cfe_wind_share": 0.5,
+      "max_cfe_pct": 83.02,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 305.74,
+      "min_std_wind_share": 0.15,
+      "min_std_pln_mwh": 9.59
+    },
+    {
+      "buyer_profile": "cold_storage",
+      "bess_hours": 0,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 19.22,
+      "max_cfe_wind_share": 0.7,
+      "max_cfe_pct": 77.28,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 339.4,
+      "min_std_wind_share": 0.2,
+      "min_std_pln_mwh": 6.95
+    },
+    {
+      "buyer_profile": "cold_storage",
+      "bess_hours": 2,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 22.12,
+      "max_cfe_wind_share": 0.6,
+      "max_cfe_pct": 82.39,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 336.95,
+      "min_std_wind_share": 0.2,
+      "min_std_pln_mwh": 7.13
+    },
+    {
+      "buyer_profile": "cold_storage",
+      "bess_hours": 4,
+      "min_shaping_cost_wind_share": 1.0,
+      "min_shaping_cost_pln_mwh": 22.26,
+      "max_cfe_wind_share": 0.5,
+      "max_cfe_pct": 85.77,
+      "max_p90_wind_share": 1.0,
+      "max_p90_pln_mwh": 337.35,
+      "min_std_wind_share": 0.2,
+      "min_std_pln_mwh": 7.38
+    }
+  ],
+  "settlement": [
+    {
+      "contract": "Pay-as-produced, 100 % PV, zero-price floor",
+      "wind_share": 0.0,
+      "bess_hours": 0,
+      "profile_gap_pln_mwh": 0.0,
+      "curtailment_gain_pln_mwh": 0.0,
+      "bess_gain_pln_mwh": 0.0,
+      "clause_clawback_pln_mwh": 49.46,
+      "seller_2025_pln_mwh": 330.54,
+      "seller_p50_pln_mwh": 329.72,
+      "seller_p90_pln_mwh": 319.1,
+      "buyer_cost_pln_per_load_mwh": 481.61
+    },
+    {
+      "contract": "Pay-as-produced, 100 % wind, zero-price floor",
+      "wind_share": 1.0,
+      "bess_hours": 0,
+      "profile_gap_pln_mwh": 0.0,
+      "curtailment_gain_pln_mwh": 0.0,
+      "bess_gain_pln_mwh": 0.0,
+      "clause_clawback_pln_mwh": 14.72,
+      "seller_2025_pln_mwh": 365.28,
+      "seller_p50_pln_mwh": 363.92,
+      "seller_p90_pln_mwh": 345.67,
+      "buyer_cost_pln_per_load_mwh": 390.62
+    },
+    {
+      "contract": "Baseload, 100 % PV, 0 h BESS",
+      "wind_share": 0.0,
+      "bess_hours": 0,
+      "profile_gap_pln_mwh": 159.12,
+      "curtailment_gain_pln_mwh": 5.64,
+      "bess_gain_pln_mwh": 0.0,
+      "clause_clawback_pln_mwh": 0.0,
+      "seller_2025_pln_mwh": 226.51,
+      "seller_p50_pln_mwh": 225.84,
+      "seller_p90_pln_mwh": 214.81,
+      "buyer_cost_pln_per_load_mwh": 380.0
+    },
+    {
+      "contract": "Baseload, 50 % wind + 50 % PV, 0 h BESS",
+      "wind_share": 0.5,
+      "bess_hours": 0,
+      "profile_gap_pln_mwh": 93.35,
+      "curtailment_gain_pln_mwh": 2.61,
+      "bess_gain_pln_mwh": 0.0,
+      "clause_clawback_pln_mwh": 0.0,
+      "seller_2025_pln_mwh": 289.26,
+      "seller_p50_pln_mwh": 288.31,
+      "seller_p90_pln_mwh": 276.7,
+      "buyer_cost_pln_per_load_mwh": 380.0
+    },
+    {
+      "contract": "Baseload, 50 % wind + 50 % PV, 2 h BESS",
+      "wind_share": 0.5,
+      "bess_hours": 2,
+      "profile_gap_pln_mwh": 93.35,
+      "curtailment_gain_pln_mwh": 2.43,
+      "bess_gain_pln_mwh": 20.04,
+      "clause_clawback_pln_mwh": 0.0,
+      "seller_2025_pln_mwh": 309.12,
+      "seller_p50_pln_mwh": 308.31,
+      "seller_p90_pln_mwh": 296.24,
+      "buyer_cost_pln_per_load_mwh": 380.0
+    },
+    {
+      "contract": "Baseload, 100 % wind, 0 h BESS",
+      "wind_share": 1.0,
+      "bess_hours": 0,
+      "profile_gap_pln_mwh": 27.58,
+      "curtailment_gain_pln_mwh": 0.53,
+      "bess_gain_pln_mwh": 0.0,
+      "clause_clawback_pln_mwh": 0.0,
+      "seller_2025_pln_mwh": 352.96,
+      "seller_p50_pln_mwh": 351.64,
+      "seller_p90_pln_mwh": 330.77,
+      "buyer_cost_pln_per_load_mwh": 380.0
+    }
+  ],
+  "bootstrap_decomposition": [
+    {
+      "wind_share": 0.0,
+      "shape_term_mean_pln_mwh": -159.43,
+      "volume_term_mean_pln_mwh": -0.45,
+      "cross_term_mean_pln_mwh": 0.1,
+      "volume_ratio_std_pct": 2.25,
+      "corr_volume_vs_shape": -0.25,
+      "corr_volume_vs_spot_mean": -0.285,
+      "seller_std_pln_mwh": 8.96,
+      "max_bridge_error_pln_mwh": 5.684341886080802e-14
+    },
+    {
+      "wind_share": 0.5,
+      "shape_term_mean_pln_mwh": -93.54,
+      "volume_term_mean_pln_mwh": -0.54,
+      "cross_term_mean_pln_mwh": 0.1,
+      "volume_ratio_std_pct": 2.25,
+      "corr_volume_vs_shape": 0.148,
+      "corr_volume_vs_spot_mean": -0.714,
+      "seller_std_pln_mwh": 9.8,
+      "max_bridge_error_pln_mwh": 5.684341886080802e-14
+    },
+    {
+      "wind_share": 1.0,
+      "shape_term_mean_pln_mwh": -27.52,
+      "volume_term_mean_pln_mwh": -0.64,
+      "cross_term_mean_pln_mwh": -0.02,
+      "volume_ratio_std_pct": 4.32,
+      "corr_volume_vs_shape": -0.241,
+      "corr_volume_vs_spot_mean": -0.596,
+      "seller_std_pln_mwh": 17.36,
+      "max_bridge_error_pln_mwh": 5.684341886080802e-14
+    }
+  ],
+  "window_comparison": [
+    {
+      "window": "2025",
+      "window_label": "2025",
+      "wind_share": 0.0,
+      "shaping_cost_0h_pln_mwh": 153.49,
+      "shaping_cost_2h_pln_mwh": 131.46,
+      "zero_floor_uplift_pln_mwh": 56.86,
+      "six_hour_uplift_pln_mwh": 25.55
+    },
+    {
+      "window": "2025",
+      "window_label": "2025",
+      "wind_share": 0.5,
+      "shaping_cost_0h_pln_mwh": 90.74,
+      "shaping_cost_2h_pln_mwh": 70.88,
+      "zero_floor_uplift_pln_mwh": 35.05,
+      "six_hour_uplift_pln_mwh": 17.01
+    },
+    {
+      "window": "2025",
+      "window_label": "2025",
+      "wind_share": 1.0,
+      "shaping_cost_0h_pln_mwh": 27.04,
+      "shaping_cost_2h_pln_mwh": 28.12,
+      "zero_floor_uplift_pln_mwh": 15.32,
+      "six_hour_uplift_pln_mwh": 8.82
+    },
+    {
+      "window": "2025_jan_sep",
+      "window_label": "Jan-Sep 2025",
+      "wind_share": 0.0,
+      "shaping_cost_0h_pln_mwh": 154.45,
+      "shaping_cost_2h_pln_mwh": 126.77,
+      "zero_floor_uplift_pln_mwh": 64.62,
+      "six_hour_uplift_pln_mwh": 28.97
+    },
+    {
+      "window": "2025_jan_sep",
+      "window_label": "Jan-Sep 2025",
+      "wind_share": 0.5,
+      "shaping_cost_0h_pln_mwh": 89.34,
+      "shaping_cost_2h_pln_mwh": 62.88,
+      "zero_floor_uplift_pln_mwh": 41.48,
+      "six_hour_uplift_pln_mwh": 20.51
+    },
+    {
+      "window": "2025_jan_sep",
+      "window_label": "Jan-Sep 2025",
+      "wind_share": 1.0,
+      "shaping_cost_0h_pln_mwh": 22.97,
+      "shaping_cost_2h_pln_mwh": 24.15,
+      "zero_floor_uplift_pln_mwh": 20.64,
+      "six_hour_uplift_pln_mwh": 12.4
+    },
+    {
+      "window": "2026_jan_sep",
+      "window_label": "Jan-Sep 2026",
+      "wind_share": 0.0,
+      "shaping_cost_0h_pln_mwh": 197.71,
+      "shaping_cost_2h_pln_mwh": 161.72,
+      "zero_floor_uplift_pln_mwh": 61.36,
+      "six_hour_uplift_pln_mwh": 27.08
+    },
+    {
+      "window": "2026_jan_sep",
+      "window_label": "Jan-Sep 2026",
+      "wind_share": 0.5,
+      "shaping_cost_0h_pln_mwh": 111.57,
+      "shaping_cost_2h_pln_mwh": 79.36,
+      "zero_floor_uplift_pln_mwh": 38.53,
+      "six_hour_uplift_pln_mwh": 17.59
+    },
+    {
+      "window": "2026_jan_sep",
+      "window_label": "Jan-Sep 2026",
+      "wind_share": 1.0,
+      "shaping_cost_0h_pln_mwh": 23.28,
+      "shaping_cost_2h_pln_mwh": 28.07,
+      "zero_floor_uplift_pln_mwh": 17.95,
+      "six_hour_uplift_pln_mwh": 8.53
+    }
+  ]
+}

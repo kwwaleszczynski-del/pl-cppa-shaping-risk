@@ -1,0 +1,7 @@
+contract,wind_share,bess_hours,profile_gap_pln_mwh,curtailment_gain_pln_mwh,bess_gain_pln_mwh,clause_clawback_pln_mwh,seller_2025_pln_mwh,seller_p50_pln_mwh,seller_p90_pln_mwh,buyer_cost_pln_per_load_mwh
+"Pay-as-produced, 100 % PV, zero-price floor",0.0,0,0.0,0.0,0.0,49.46,330.54,329.72,319.1,481.61
+"Pay-as-produced, 100 % wind, zero-price floor",1.0,0,0.0,0.0,0.0,14.72,365.28,363.92,345.67,390.62
+"Baseload, 100 % PV, 0 h BESS",0.0,0,159.12,5.64,0.0,0.0,226.51,225.84,214.81,380.0
+"Baseload, 50 % wind + 50 % PV, 0 h BESS",0.5,0,93.35,2.61,0.0,0.0,289.26,288.31,276.7,380.0
+"Baseload, 50 % wind + 50 % PV, 2 h BESS",0.5,2,93.35,2.43,20.04,0.0,309.12,308.31,296.24,380.0
+"Baseload, 100 % wind, 0 h BESS",1.0,0,27.58,0.53,0.0,0.0,352.96,351.64,330.77,380.0

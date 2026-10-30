@@ -1,102 +1,23 @@
 {
   "max_settlement_accounting_error_pln_mwh": 7.450580596923829e-14,
-  "max_mc_500yr_bridge_error_pln_mwh": 8.526512829121202e-14,
-  "max_hourly_residual_error_pln_mwh": 5.684341886080802e-14,
+  "max_bootstrap_bridge_error_pln_mwh": 5.684341886080802e-14,
+  "max_hourly_residual_error_pln_mwh": 1.1368683772161603e-13,
+  "dispatch_balance": {
+    "max_soc_balance_error_mwh": 2.7284841053187847e-11,
+    "max_energy_balance_error_mwh": 4.128196451347321e-09,
+    "max_shaping_split_error_pln_mwh": 1.8758328224066645e-12
+  },
   "all_identities_below_1e9": true,
   "sinusoidal_analytical_recovery": {
-    "truth_p_bar_pln_mwh": 435.0,
-    "est_p_bar_pln_mwh": 434.9999999999999,
-    "truth_p_cap_pln_mwh": 278.4,
-    "est_p_cap_pln_mwh": 278.39999999999986,
-    "truth_shape_risk_pln_mwh": -156.60000000000002,
-    "est_shape_risk_pln_mwh": -156.60000000000002,
-    "truth_price_level_pln_mwh": 55.0,
-    "est_price_level_pln_mwh": 54.999999999999886,
-    "shape_abs_error_pln_mwh": 0.0,
-    "bridge_abs_error_pln_mwh": 0.0
+    "truth_p_bar_pln_mwh": 400.0,
+    "est_p_bar_pln_mwh": 400.0,
+    "truth_p_cap_pln_mwh": 320.0,
+    "est_p_cap_pln_mwh": 319.99999999999994,
+    "truth_shape_risk_pln_mwh": -80.0,
+    "est_shape_risk_pln_mwh": -80.00000000000006,
+    "shape_abs_error_pln_mwh": 5.684341886080802e-14,
+    "bridge_abs_error_pln_mwh": 2.842170943040401e-14
   },
-  "gaussian_covariance_recovery": {
-    "truth_cross_cov_pln_mwh": -2.6999999999999997,
-    "est_cross_cov_pln_mwh": -2.6999999999999997,
-    "cov_abs_error_pln_mwh": 0.0,
-    "truth_expected_shape_pln_mwh": -62.0,
-    "est_expected_shape_pln_mwh": -62.0,
-    "truth_expected_total_gap_pln_mwh": -9.7,
-    "est_expected_total_gap_pln_mwh": -9.699999999999998,
-    "max_yearly_bridge_error_pln_mwh": 9.947598300641403e-14
-  },
-  "sample_settlement_checks": [
-    {
-      "mix": "pure_pv",
-      "structure": "pay_as_produced",
-      "clause": "unfloored",
-      "seller_effective_pln_mwh": 380.0,
-      "floor_clawback_pln_mwh": 0.0,
-      "accounting_error_pln_mwh": 0.0
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "pay_as_produced",
-      "clause": "zero_floor",
-      "seller_effective_pln_mwh": 340.9348,
-      "floor_clawback_pln_mwh": 39.0652,
-      "accounting_error_pln_mwh": 0.0
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "pay_as_produced",
-      "clause": "six_hour_rule",
-      "seller_effective_pln_mwh": 349.7223,
-      "floor_clawback_pln_mwh": 30.2777,
-      "accounting_error_pln_mwh": 0.0
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "baseload",
-      "clause": "unfloored",
-      "seller_effective_pln_mwh": 223.4,
-      "floor_clawback_pln_mwh": 0.0,
-      "accounting_error_pln_mwh": 0.0
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "baseload",
-      "clause": "zero_floor",
-      "seller_effective_pln_mwh": 205.5978,
-      "floor_clawback_pln_mwh": 17.8022,
-      "accounting_error_pln_mwh": 0.0
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "baseload",
-      "clause": "six_hour_rule",
-      "seller_effective_pln_mwh": 209.5335,
-      "floor_clawback_pln_mwh": 13.8665,
-      "accounting_error_pln_mwh": 3.7252902984619144e-14
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "two_shift",
-      "clause": "unfloored",
-      "seller_effective_pln_mwh": 228.4436,
-      "floor_clawback_pln_mwh": 0.0,
-      "accounting_error_pln_mwh": 3.7252902984619144e-14
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "two_shift",
-      "clause": "zero_floor",
-      "seller_effective_pln_mwh": 207.8918,
-      "floor_clawback_pln_mwh": 20.5518,
-      "accounting_error_pln_mwh": 3.7252902984619144e-14
-    },
-    {
-      "mix": "pure_pv",
-      "structure": "two_shift",
-      "clause": "six_hour_rule",
-      "seller_effective_pln_mwh": 213.5095,
-      "floor_clawback_pln_mwh": 14.9341,
-      "accounting_error_pln_mwh": 0.0
-    }
-  ]
+  "bootstrap_paths": 500,
+  "max_clause_accounting_error_pln_mwh": 1.5568111689913515e-13
 }
