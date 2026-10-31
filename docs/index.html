@@ -169,7 +169,7 @@ const near = (a, b) => Math.abs(a - b) < 1e-6;
 const WINDOW_LABELS = {"2025": "2025", "2025_jan_sep": "Jan-Sep 2025", "2026_jan_sep": "Jan-Sep 2026"};
 
 function layoutBase(extra) {
-  return Object.assign({
+  const lay = Object.assign({
     paper_bgcolor: css("--surface"),
     plot_bgcolor: css("--surface"),
     font: {family: "system-ui, -apple-system, Segoe UI, sans-serif", color: css("--ink2"), size: 12},
@@ -177,6 +177,13 @@ function layoutBase(extra) {
     hoverlabel: {bgcolor: css("--surface"), font: {color: css("--ink")}},
     legend: {orientation: "h", y: -0.2, x: 0, font: {size: 11}}
   }, extra);
+  // phones: long chart titles break before their unit in a smaller font, so they fit the card
+  const tt = lay.title && lay.title.text;
+  if (window.innerWidth < 640 && tt && tt.length > 34) {
+    lay.title = Object.assign({}, lay.title, {text: tt.replace(" [", "<br>["), font: Object.assign({}, lay.title.font, {size: 11})});
+    lay.margin = Object.assign({}, lay.margin, {t: 56});
+  }
+  return lay;
 }
 const axis = extra => Object.assign({gridcolor: css("--grid"), linecolor: css("--axis"), zeroline: false}, extra);
 const cfg = {responsive: true, displaylogo: false};
