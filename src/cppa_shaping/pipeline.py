@@ -296,7 +296,7 @@ def generate_plots(
     ax1.set_xlim(0, 100)
     ax1.set_ylim(0, None)
     ax1.grid(alpha=0.25)
-    ax1.legend(loc="upper right", frameon=True, fontsize=8)
+    ax1.legend(loc="upper right", frameon=True, fontsize=9)
 
     ax2.plot(w_pct, sub[0]["seller_p50_pln_mwh"], color=ORANGE, lw=1.4, label="P50 (0 h)")
     ax2.plot(w_pct, sub[0]["seller_p90_pln_mwh"], color=RED, lw=1.2, ls="--", label="P90 conservative (0 h)")
@@ -308,14 +308,14 @@ def generate_plots(
     ax2.set_title("Bootstrap P50 and P90 seller revenue", fontsize=9.5)
     ax2.set_xlim(0, 100)
     ax2.grid(alpha=0.25)
-    ax2.legend(loc="lower right", frameon=True, fontsize=7.5)
+    ax2.legend(loc="upper center", bbox_to_anchor=(0.5, -0.2), ncol=2, frameon=False, fontsize=8.5)
 
     ax3.set_xlabel("Onshore wind share in hybrid portfolio [%]")
     ax3.set_ylabel("Hourly 24/7 CFE match [%]")
     ax3.set_title("24/7 hourly CFE score (diamond = maximum)", fontsize=9.5)
     ax3.set_xlim(0, 100)
     ax3.grid(alpha=0.25)
-    ax3.legend(loc="lower right", frameon=True, fontsize=8)
+    ax3.legend(loc="lower right", frameon=True, fontsize=9)
     _save(fig, img_dir / "shaping_cost_mix.png")
 
     # --- 2. docs/img/settlement_waterfall.png ---
@@ -336,13 +336,13 @@ def generate_plots(
     ax_l.bar(x_a, shape_net, width=0.5, bottom=net, color=ORANGE, label="Shaping cost (after curtailment and BESS)")
     ax_l.bar(x_a, claw, width=0.5, bottom=net + shape_net, color=RED, label="Negative-price clawback")
     ax_l.axhline(strike_pln_mwh, color="k", ls="--", lw=0.9, label=f"Strike ({strike_pln_mwh:.0f} PLN/MWh)")
-    ax_l.set_xticks(x_a, labels, fontsize=7.5)
+    ax_l.set_xticks(x_a, labels, fontsize=8.5)
     ax_l.set_ylabel("PLN per contracted MWh")
     ax_l.set_ylim(0, strike_pln_mwh * 1.32)
     ax_l.set_title("Where the 380 PLN/MWh strike goes (2025)", fontsize=9.5)
     ax_l.grid(axis="y", alpha=0.25)
     ax_l.set_axisbelow(True)
-    ax_l.legend(loc="upper center", ncol=2, frameon=True, fontsize=7)
+    ax_l.legend(loc="upper center", ncol=2, frameon=True, fontsize=8.5)
 
     for w, col in ((0.0, ORANGE), (1.0, BLUE)):
         tag = f"w{int(round(w * 100)):03d}"
@@ -356,7 +356,7 @@ def generate_plots(
     ax_r.set_ylabel("Shape term vs path mean [PLN/MWh]")
     ax_r.set_title("Bootstrap years: volume vs capture discount", fontsize=9.5)
     ax_r.grid(alpha=0.25)
-    ax_r.legend(loc="best", frameon=True, fontsize=8)
+    ax_r.legend(loc="best", frameon=True, fontsize=9)
     _save(fig, img_dir / "settlement_waterfall.png")
 
     # --- 3. docs/img/negative_price_clauses.png ---
@@ -372,7 +372,7 @@ def generate_plots(
     ax_c1.set_xlim(0, 100)
     ax_c1.set_ylim(0, None)
     ax_c1.grid(alpha=0.25)
-    ax_c1.legend(loc="upper right", frameon=True, fontsize=8)
+    ax_c1.legend(loc="upper right", frameon=True, fontsize=9)
 
     windows = list(COMPARISON_WINDOWS)
     x_m = np.arange(len(KEY_MIXES))
@@ -389,7 +389,7 @@ def generate_plots(
     ax_c2.set_title("Zero-price floor uplift by window", fontsize=9.5)
     ax_c2.grid(axis="y", alpha=0.25)
     ax_c2.set_axisbelow(True)
-    ax_c2.legend(loc="upper right", frameon=True, fontsize=8)
+    ax_c2.legend(loc="upper right", frameon=True, fontsize=9)
     _save(fig, img_dir / "negative_price_clauses.png")
 
     # --- 4. docs/img/cashflow_distribution.png ---
@@ -407,7 +407,7 @@ def generate_plots(
     ax_d1.set_ylabel(f"Bootstrap years (out of {path_revenue.shape[1]})")
     ax_d1.set_title("Weekly block bootstrap of 2025", fontsize=9.5)
     ax_d1.grid(alpha=0.25)
-    ax_d1.legend(loc="upper right", frameon=True, fontsize=7.5)
+    ax_d1.legend(loc="upper center", bbox_to_anchor=(0.5, -0.17), ncol=2, frameon=False, fontsize=8.5)
 
     sl = _day_windows(df_ref, 3)["spring"]
     spot = df_ref["spot_pln_mwh"].to_numpy()
@@ -431,7 +431,7 @@ def generate_plots(
     ax_d2.set_ylim(0, top)
     ax_d2.set_title("Around the Apr-Sep 2025 day with most negative-price hours", fontsize=9.5)
     ax_d2.grid(alpha=0.25)
-    ax_d2.legend(loc="upper left", frameon=True, fontsize=7)
+    ax_d2.legend(loc="upper center", bbox_to_anchor=(0.5, -0.17), ncol=3, frameon=False, fontsize=8.5)
     _save(fig, img_dir / "cashflow_distribution.png")
 
 
